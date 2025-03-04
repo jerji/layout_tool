@@ -193,7 +193,7 @@ def add_bleed_and_marks(image_path: str, bleed_size: int, crop_mark_length: int,
 
 # --- ReportLab-related functions (Imposition) ---
 
-def _load_image_and_get_dimensions(img: Image.Image) -> Tuple[float, float]:
+def _get_image_dimensions(img: Image.Image) -> Tuple[float, float]:
     """Returns the image's dimensions in mm."""
     image_width, image_height = img.size
     dpi = img.info.get('dpi', (72, 72))  # Default to 72 DPI if not specified
@@ -285,7 +285,7 @@ def create_imposition_pdf(input_image: Image.Image, output_pdf_path: str, paper_
     if input_image is None:
         return
 
-    image_width_mm, image_height_mm = _load_image_and_get_dimensions(input_image)
+    image_width_mm, image_height_mm = _get_image_dimensions(input_image)
 
 
     page_width, page_height = _set_paper_size_and_orientation(paper_size_name, orientation)
