@@ -119,19 +119,19 @@ def _draw_line(draw: ImageDraw.ImageDraw, x1: int, y1: int, x2: int, y2: int, ne
     sx, sy = 1 if x1 < x2 else -1, 1 if y1 < y2 else -1
     err = (dx if dx > dy else -dy) / 2
 
+    temp_img = draw._image.copy()  # Make a copy of the image
     while True:
         if 0 <= x1 < new_width and 0 <= y1 < new_height:
-            if color.lower() == 'inverted':
-                r, g, b = draw._image.getpixel((x1, y1))
-                chosen_color = (255 - r, 255 - g, 255 - b)
-            else:
-                chosen_color = color
-
             for i in range(-(width // 2), (width + 1) // 2):
                 for j in range(-(width // 2), (width + 1) // 2):
                     px, py = x1 + i, y1 + j
                     # Bounds check is still needed *inside* the loop
                     if 0 <= px < new_width and 0 <= py < new_height:
+                        if color.lower() == 'inverted':
+                            r, g, b = temp_img.getpixel((px, py))  # Read color from (px, py)
+                            chosen_color = (255 - r, 255 - g, 255 - b)
+                        else:
+                            chosen_color = color
                         draw.point((px, py), fill=chosen_color)
         if x1 == x2 and y1 == y2:
             break
@@ -185,11 +185,12 @@ def add_bleed_and_marks(image_path: str, bleed_size: int, crop_mark_length: int,
         new_img, new_width, new_height = _create_new_image_with_bleed(img, width, height, bleed_size, bleed_mode)
         draw = ImageDraw.Draw(new_img)
         _draw_bleed_crop_marks(draw, new_width, new_height, bleed_size, crop_mark_length, cut_mark_length,
-                                  crop_mark_color)
+                               crop_mark_color)
         return new_img
     except Exception as e:
         print(f"Error adding bleed and marks: {e}")
         return None
+
 
 # --- ReportLab-related functions (Imposition) ---
 
@@ -279,14 +280,13 @@ def _draw_images_and_cut_marks(c: canvas.Canvas, img: Image.Image, image_positio
 
 
 def create_imposition_pdf(input_image: Image.Image, output_pdf_path: str, paper_size_name: str, orientation: str,
-                         num_copies: int, cut_marks: bool, margin: float, spacing: float,
-                         imposition_mark_length:float):
+                          num_copies: int, cut_marks: bool, margin: float, spacing: float,
+                          imposition_mark_length: float):
     """Creates the imposition PDF. [Imposition]"""
     if input_image is None:
         return
 
     image_width_mm, image_height_mm = _get_image_dimensions(input_image)
-
 
     page_width, page_height = _set_paper_size_and_orientation(paper_size_name, orientation)
     c = canvas.Canvas(output_pdf_path, pagesize=(page_width, page_height))
@@ -295,7 +295,8 @@ def create_imposition_pdf(input_image: Image.Image, output_pdf_path: str, paper_
         image_width_mm, image_height_mm, page_width, page_height, num_copies, margin, spacing
     )
 
-    _draw_images_and_cut_marks(c, input_image, image_positions, scaled_width, scaled_height, cut_marks, imposition_mark_length)
+    _draw_images_and_cut_marks(c, input_image, image_positions, scaled_width, scaled_height, cut_marks,
+                               imposition_mark_length)
     c.save()
 
 
@@ -341,10 +342,9 @@ def main():
     spacing = config.getfloat('Imposition', 'spacing') * mm
     imposition_mark_length = config.getfloat('Imposition', 'imposition_mark_length')
 
-
     if bleed_size > 0:
         processed_image = add_bleed_and_marks(args.input_image, bleed_size, crop_mark_length,
-                                        crop_mark_color, bleed_mode, cut_mark_length)
+                                              crop_mark_color, bleed_mode, cut_mark_length)
         if processed_image is None:
             print("Failed to add bleed and marks. Exiting.")
             sys.exit(1)
@@ -352,7 +352,7 @@ def main():
         processed_image = _open_image(args.input_image)[0]  # Get only the image part
 
     create_imposition_pdf(processed_image, args.output_pdf, paper_size_name, orientation,
-                            num_copies, cut_marks, margin, spacing, imposition_mark_length)
+                          num_copies, cut_marks, margin, spacing, imposition_mark_length)
     print(f"PDF created successfully: {args.output_pdf}")
 
 
