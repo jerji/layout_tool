@@ -112,7 +112,7 @@ def _create_new_image_with_bleed(img: Image.Image, width: int, height: int, blee
     return new_img, new_width, new_height
 
 
-def _draw_line(draw: ImageDraw.ImageDraw, x1: int, y1: int, x2: int, y2: int, new_width: int, new_height: int,
+def _draw_line(draw: ImageDraw.ImageDraw, x1: int, y1: int, x2: int, y2: int, image_width: int, image_height: int,
                color: str = "black", width: int = 2):
     """Draws a line using Bresenham's algorithm, handling per-pixel inversion."""
     dx, dy = abs(x2 - x1), abs(y2 - y1)
@@ -121,12 +121,12 @@ def _draw_line(draw: ImageDraw.ImageDraw, x1: int, y1: int, x2: int, y2: int, ne
 
     temp_img = draw._image.copy()  # Make a copy of the image
     while True:
-        if 0 <= x1 < new_width and 0 <= y1 < new_height:
+        if 0 <= x1 < image_width and 0 <= y1 < image_height:
             for i in range(-(width // 2), (width + 1) // 2):
                 for j in range(-(width // 2), (width + 1) // 2):
                     px, py = x1 + i, y1 + j
                     # Bounds check is still needed *inside* the loop
-                    if 0 <= px < new_width and 0 <= py < new_height:
+                    if 0 <= px < image_width and 0 <= py < image_height:
                         if color.lower() == 'inverted':
                             r, g, b = temp_img.getpixel((px, py))  # Read color from (px, py)
                             chosen_color = (255 - r, 255 - g, 255 - b)
@@ -144,34 +144,34 @@ def _draw_line(draw: ImageDraw.ImageDraw, x1: int, y1: int, x2: int, y2: int, ne
             y1 += sy
 
 
-def _draw_bleed_crop_marks(draw: ImageDraw.ImageDraw, new_width: int, new_height: int, bleed_size: int,
+def _draw_bleed_crop_marks(draw: ImageDraw.ImageDraw, image_width: int, image_height: int, bleed_size: int,
                            crop_mark_length: int, cut_mark_length: int, crop_mark_color: str):
     """Draws crop and cut marks for bleed."""
-    _draw_line(draw, bleed_size - crop_mark_length, bleed_size, bleed_size, bleed_size, new_width, new_height,
+    _draw_line(draw, bleed_size - crop_mark_length, bleed_size, bleed_size, bleed_size, image_width, image_height,
                color=crop_mark_color, width=2)
-    _draw_line(draw, bleed_size, bleed_size - crop_mark_length, bleed_size, bleed_size, new_width, new_height,
+    _draw_line(draw, bleed_size, bleed_size - crop_mark_length, bleed_size, bleed_size, image_width, image_height,
                color=crop_mark_color, width=2)
-    _draw_line(draw, new_width - bleed_size, bleed_size - crop_mark_length, new_width - bleed_size, bleed_size,
-               new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width - bleed_size, bleed_size, new_width - bleed_size + crop_mark_length, bleed_size,
-               new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, bleed_size - crop_mark_length, new_height - bleed_size, bleed_size, new_height - bleed_size,
-               new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, bleed_size, new_height - bleed_size, bleed_size,
-               new_height - bleed_size + crop_mark_length, new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width - bleed_size, new_height - bleed_size, new_width - bleed_size + crop_mark_length,
-               new_height - bleed_size, new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width - bleed_size, new_height - bleed_size, new_width - bleed_size,
-               new_height - bleed_size + crop_mark_length, new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width // 2 - cut_mark_length // 2, bleed_size, new_width // 2 + cut_mark_length // 2,
-               bleed_size, new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width // 2 - cut_mark_length // 2, new_height - bleed_size,
-               new_width // 2 + cut_mark_length // 2, new_height - bleed_size, new_width, new_height,
+    _draw_line(draw, image_width - bleed_size, bleed_size - crop_mark_length, image_width - bleed_size, bleed_size,
+               image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width - bleed_size, bleed_size, image_width - bleed_size + crop_mark_length, bleed_size,
+               image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, bleed_size - crop_mark_length, image_height - bleed_size, bleed_size, image_height - bleed_size,
+               image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, bleed_size, image_height - bleed_size, bleed_size,
+               image_height - bleed_size + crop_mark_length, image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width - bleed_size, image_height - bleed_size, image_width - bleed_size + crop_mark_length,
+               image_height - bleed_size, image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width - bleed_size, image_height - bleed_size, image_width - bleed_size,
+               image_height - bleed_size + crop_mark_length, image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width // 2 - cut_mark_length // 2, bleed_size, image_width // 2 + cut_mark_length // 2,
+               bleed_size, image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width // 2 - cut_mark_length // 2, image_height - bleed_size,
+               image_width // 2 + cut_mark_length // 2, image_height - bleed_size, image_width, image_height,
                color=crop_mark_color, width=2)
-    _draw_line(draw, bleed_size, new_height // 2 - cut_mark_length // 2, bleed_size,
-               new_height // 2 + cut_mark_length // 2, new_width, new_height, color=crop_mark_color, width=2)
-    _draw_line(draw, new_width - bleed_size, new_height // 2 - cut_mark_length // 2, new_width - bleed_size,
-               new_height // 2 + cut_mark_length // 2, new_width, new_height, color=crop_mark_color, width=2)
+    _draw_line(draw, bleed_size, image_height // 2 - cut_mark_length // 2, bleed_size,
+               image_height // 2 + cut_mark_length // 2, image_width, image_height, color=crop_mark_color, width=2)
+    _draw_line(draw, image_width - bleed_size, image_height // 2 - cut_mark_length // 2, image_width - bleed_size,
+               image_height // 2 + cut_mark_length // 2, image_width, image_height, color=crop_mark_color, width=2)
 
 
 def add_bleed_and_marks(image_path: str, bleed_size: int, crop_mark_length: int,
